@@ -1,8 +1,16 @@
 import sys
 from subprocess import call as cmd
 import subprocess
+from typing import Container
 import pytermgui as ptg
+from pytermgui import ansi_interface as ansi
+from pytermgui import colors as rgb
 import functools
+from time import sleep
+
+container = ptg.Container()
+window = ptg.Window()
+manager = ptg.WindowManager()
 
 # Meant to be used as a decorator:
 # @exitIfDev
@@ -21,16 +29,44 @@ def dropToConsole():
     # sudo fbterm -- python3 main.py
     cmd(["pkill", "fbterm"])
 
-def returnToMenu():
-    container = menuContainer
 
 def viewDmesg():
     # Provides a color output of dmesg with less
-    subprocess.run(['dmesg', '--human', '--color=always'])
+    cmd(['dmesg', '--human', '--color=always'])
 
 def viewMoreInformation():
-    # inxi,
-    pass
+    print("The output of quite a few system information commands will be displayed.")
+    print("If you want to go to the next one, press q")
+    sleep(5)
+
+    # inxi
+    print("Inxi:")
+    sleep(2)
+    cmd(['inxi -FxxxaY -2 | less -R'], shell=True)
+
+    # lshw
+    ansi.clear('screen')
+    print("Lshw: (may not show all devices due to a minimal kernel being used)")
+    sleep(2)
+    cmd(['lshw | less -R'], shell=True)
+
+    # lsusb
+    ansi.clear('screen')
+    print("Lsusb: (may not show all devices due to a minimal kernel being used)")
+    sleep(2)
+    cmd(['lsusb -v | less -R'], shell=True)
+
+    # lspci
+    ansi.clear('screen')
+    print("Lspci: (may not show all devices due to a minimal kernel being used)")
+    sleep(2)
+    cmd(['lspci -vvv | less -R'], shell=True)
+
+    # lsblk
+    ansi.clear('screen')
+    print("Lsblk: (may not show all devices due to a minimal kernel being used)")
+    sleep(2)
+    cmd(['lsblk | less -R'], shell=True)
 
 @exitIfDev
 def powerOff():
@@ -67,7 +103,7 @@ with ptg.WindowManager() as manager:
         "",
         ["Console", lambda *_: dropToConsole()],
         ["View Dmesg", lambda *_: viewDmesg()],
-        ["More information", lambda *_: manager.exit()],
+        ["More information", lambda *_: viewMoreInformation()],
         "",
         "[wm-title bold] Exit",
         "",
@@ -77,7 +113,6 @@ with ptg.WindowManager() as manager:
     )
 
     # Make the container a global so we can modify it from other functions
-    global container
     container = menuContainer
 
     # Decrease width to half of the terminal screen
